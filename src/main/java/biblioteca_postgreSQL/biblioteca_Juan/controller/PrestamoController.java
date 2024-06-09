@@ -1,45 +1,92 @@
 package biblioteca_postgreSQL.biblioteca_Juan.controller;
 
-import biblioteca_postgreSQL.biblioteca_Juan.entity.Autor;
 import biblioteca_postgreSQL.biblioteca_Juan.entity.Prestamo;
-import biblioteca_postgreSQL.biblioteca_Juan.error.BadRequestExcepcion;
 import biblioteca_postgreSQL.biblioteca_Juan.service.PrestamoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controlador REST para la entidad Prestamo.
+ */
 @RestController
-@RequestMapping("/prestamo")
+@RequestMapping("/api/prestamos")
 public class PrestamoController {
+
     @Autowired
     private PrestamoService prestamoService;
 
-    @PostMapping("/add")
-    public ResponseEntity<?> crearPrestamo(@RequestBody Prestamo prestamo){
-        return new ResponseEntity<>(prestamoService.crearPrestamo(prestamo), HttpStatus.CREATED);
+    /**
+     * Crea un nuevo préstamo.
+     *
+     * @param prestamo El préstamo a crear.
+     * @return El préstamo creado.
+     */
+    @PostMapping
+    public ResponseEntity<Prestamo> createPrestamo(@RequestBody Prestamo prestamo) {
+        Prestamo savedPrestamo = prestamoService.savePrestamo(prestamo);
+        return ResponseEntity.ok(savedPrestamo);
     }
-    @GetMapping("/getOne/{id}")
-    public ResponseEntity<?> buscarPrestamoById(@PathVariable UUID id){
-        return new ResponseEntity<>(prestamoService.buscarPrestamoById(id),HttpStatus.FOUND);
+
+    /**
+     * Obtiene un préstamo por su ID.
+     *
+     * @param id El ID del préstamo.
+     * @return El préstamo encontrado, o ResponseEntity.notFound() si no se encuentra.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Prestamo> getPrestamoById(@PathVariable UUID id) {
+        Prestamo prestamo = prestamoService.getPrestamoById(id);
+        return (prestamo != null) ? ResponseEntity.ok(prestamo) : ResponseEntity.notFound().build();
     }
-    @GetMapping("/listar")
-    public ResponseEntity<?> listarPrestamos(){
-        return new ResponseEntity<>(prestamoService.listarPrestamos(),HttpStatus.FOUND);
+
+    /**
+     * Obtiene todos los préstamos.
+     *
+     * @return Lista de préstamos.
+     */
+    @GetMapping
+    public ResponseEntity<List<Prestamo>> getAllPrestamos() {
+        List<Prestamo> prestamos = prestamoService.getAllPrestamos();
+        return ResponseEntity.ok(prestamos);
     }
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> actualizarPrestamo(@RequestBody Prestamo prestamo,@PathVariable UUID id){
-        return new ResponseEntity<>(prestamoService.actualizarPrestamo(prestamo,id),HttpStatus.OK);
+
+    /**
+     * Actualiza un préstamo existente.
+     *
+     * @param id El ID del préstamo a actualizar.
+     * @param prestamo Los detalles del préstamo a actualizar.
+     * @return El préstamo actualizado, o ResponseEntity.notFound() si no se encuentra.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Prestamo> updatePrestamo(@PathVariable UUID id, @RequestBody Prestamo prestamo) {
+        Prestamo existingPrestamo = prestamoService.getPrestamoById(id);
+        if (existingPrestamo != null) {
+            prestamo.setId_prestamo(id); // Asegura que el ID del préstamo sea correcto
+            Prestamo updatedPrestamo = prestamoService.savePrestamo(prestamo);
+            return ResponseEntity.ok(updatedPrestamo);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> borrarPrestamoById(@PathVariable UUID id){
-        try{
-            prestamoService.borrarPrestamoById(id);
-            return new ResponseEntity<>("Prestamo borrado correctamente",HttpStatus.OK);
-        }catch (Exception ex){
-            throw new BadRequestExcepcion("Error al borrar el presstamo");
+
+    /**
+     * Elimina un préstamo por su ID.
+     *
+     * @param id El ID del préstamo a eliminar.
+     * @return ResponseEntity.noContent() si se elimina correctamente, o ResponseEntity.notFound() si no se encuentra.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePrestamo(@PathVariable UUID id) {
+        Prestamo existingPrestamo = prestamoService.getPrestamoById(id);
+        if (existingPrestamo != null) {
+            prestamoService.deletePrestamo(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
         }
     }
 }

@@ -1,45 +1,92 @@
 package biblioteca_postgreSQL.biblioteca_Juan.controller;
 
 import biblioteca_postgreSQL.biblioteca_Juan.entity.Libro;
-import biblioteca_postgreSQL.biblioteca_Juan.entity.Usuario;
-import biblioteca_postgreSQL.biblioteca_Juan.error.BadRequestExcepcion;
 import biblioteca_postgreSQL.biblioteca_Juan.service.LibroService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controlador REST para la entidad Libro.
+ */
 @RestController
-@RequestMapping("/libro")
+@RequestMapping("</api/libros>")
 public class LibroController {
+
     @Autowired
     private LibroService libroService;
 
-    @PostMapping("/add")
-    public ResponseEntity<?> crearLibro(@RequestBody Libro libro){
-        return new ResponseEntity<>(libroService.crearLibro(libro), HttpStatus.CREATED);
+    /**
+     * Crea un nuevo libro.
+     *
+     * @param libro El libro a crear.
+     * @return El libro creado.
+     */
+    @PostMapping
+    public ResponseEntity<Libro> createLibro(@RequestBody Libro libro) {
+        Libro savedLibro = libroService.saveLibro(libro);
+        return ResponseEntity.ok(savedLibro);
     }
-    @GetMapping("/getOne/{id}")
-    public ResponseEntity<?> buscarLibroById(@PathVariable UUID id){
-        return new ResponseEntity<>(libroService.buscarLibroById(id),HttpStatus.FOUND);
+
+    /**
+     * Obtiene un libro por su ID.
+     *
+     * @param id El ID del libro.
+     * @return El libro encontrado, o ResponseEntity.notFound() si no se encuentra.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Libro> getLibroById(@PathVariable UUID id) {
+        Libro libro = libroService.getLibroById(id);
+        return (libro != null) ? ResponseEntity.ok(libro) : ResponseEntity.notFound().build();
     }
-    @GetMapping("/listar")
-    public ResponseEntity<?> listarLibros(){
-        return new ResponseEntity<>(libroService.listarLibros(),HttpStatus.FOUND);
+
+    /**
+     * Obtiene todos los libros.
+     *
+     * @return Lista de libros.
+     */
+    @GetMapping
+    public ResponseEntity<List<Libro>> getAllLibros() {
+        List<Libro> libros = libroService.getAllLibros();
+        return ResponseEntity.ok(libros);
     }
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> actualizarLibro(@RequestBody Libro libro,@PathVariable UUID id){
-        return new ResponseEntity<>(libroService.actualizarLibro(libro,id),HttpStatus.OK);
+
+    /**
+     * Actualiza un libro existente.
+     *
+     * @param id El ID del libro a actualizar.
+     * @param libro Los detalles del libro a actualizar.
+     * @return El libro actualizado, o ResponseEntity.notFound() si no se encuentra.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Libro> updateLibro(@PathVariable UUID id, @RequestBody Libro libro) {
+        Libro existingLibro = libroService.getLibroById(id);
+        if (existingLibro != null) {
+            libro.setId_libro(id); // Asegura que el ID del libro sea correcto
+            Libro updatedLibro = libroService.saveLibro(libro);
+            return ResponseEntity.ok(updatedLibro);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> borrarLibroById(@PathVariable UUID id){
-        try{
-            libroService.borrarLibroById(id);
-            return new ResponseEntity<>("Libro borrado correctamente",HttpStatus.OK);
-        }catch (Exception ex){
-            throw new BadRequestExcepcion("Error al borrar el Libro");
+
+    /**
+     * Elimina un libro por su ID.
+     *
+     * @param id El ID del libro a eliminar.
+     * @return ResponseEntity.noContent() si se elimina correctamente, o ResponseEntity.notFound() si no se encuentra.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLibro(@PathVariable UUID id) {
+        Libro existingLibro = libroService.getLibroById(id);
+        if (existingLibro != null) {
+            libroService.deleteLibro(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
         }
     }
 }
