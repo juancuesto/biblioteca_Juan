@@ -1,8 +1,7 @@
 package biblioteca_postgreSQL.biblioteca_Juan.controller;
 
+import biblioteca_postgreSQL.biblioteca_Juan.entity.Categoria;
 import biblioteca_postgreSQL.biblioteca_Juan.entity.Libro;
-import biblioteca_postgreSQL.biblioteca_Juan.entity.Usuario;
-import biblioteca_postgreSQL.biblioteca_Juan.error.BadRequestExcepcion;
 import biblioteca_postgreSQL.biblioteca_Juan.service.LibroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,34 +11,52 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/libro")
+@RequestMapping("/api/libros")
 public class LibroController {
     @Autowired
     private LibroService libroService;
 
-    @PostMapping("/add")
-    public ResponseEntity<?> crearLibro(@RequestBody Libro libro){
-        return new ResponseEntity<>(libroService.crearLibro(libro), HttpStatus.CREATED);
+
+    @PostMapping
+    public ResponseEntity<?> crearLibro(@RequestBody Libro libro) {
+        return new ResponseEntity<>(libroService.saveLibro(libro), HttpStatus.CREATED);
     }
-    @GetMapping("/getOne/{id}")
-    public ResponseEntity<?> buscarLibroById(@PathVariable UUID id){
-        return new ResponseEntity<>(libroService.buscarLibroById(id),HttpStatus.FOUND);
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getLibroById(@PathVariable UUID id) {
+        Libro libro = libroService.getLibroById(id);
+        if (libro != null) {
+            return new ResponseEntity<>(libro, HttpStatus.FOUND);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado la libro", HttpStatus.NOT_FOUND);
+        }
+        //return new ResponseEntity<>(libroService.getLibroById(id), HttpStatus.FOUND);
     }
-    @GetMapping("/listar")
-    public ResponseEntity<?> listarLibros(){
-        return new ResponseEntity<>(libroService.listarLibros(),HttpStatus.FOUND);
+
+    @GetMapping
+    public ResponseEntity<?> getAllLibros() {
+        return new ResponseEntity<>(libroService.getAllLibros(), HttpStatus.OK);
     }
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> actualizarLibro(@RequestBody Libro libro,@PathVariable UUID id){
-        return new ResponseEntity<>(libroService.actualizarLibro(libro,id),HttpStatus.OK);
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizarLibro(@RequestBody Libro libro, @PathVariable UUID id) {
+        Libro libro1 = libroService.getLibroById(id);
+        if (libro1 != null) {
+            libro1.setId_libro(libro.getId_libro());
+            return new ResponseEntity<>(libroService.saveLibro(libro1), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado la libro a actualiazar", HttpStatus.NOT_FOUND);
+        }
     }
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> borrarLibroById(@PathVariable UUID id){
-        try{
-            libroService.borrarLibroById(id);
-            return new ResponseEntity<>("Libro borrado correctamente",HttpStatus.OK);
-        }catch (Exception ex){
-            throw new BadRequestExcepcion("Error al borrar el Libro");
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteLibroById(@PathVariable UUID id) {
+        Libro libro = libroService.getLibroById(id);
+        if (libro != null) {
+            libroService.deleteLibroById(id);
+            return new ResponseEntity<>("libro borrado correctamente", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado el libro a borrar", HttpStatus.NOT_FOUND);
         }
     }
 }

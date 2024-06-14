@@ -1,7 +1,6 @@
 package biblioteca_postgreSQL.biblioteca_Juan.controller;
 
 import biblioteca_postgreSQL.biblioteca_Juan.entity.Autor;
-import biblioteca_postgreSQL.biblioteca_Juan.error.BadRequestExcepcion;
 import biblioteca_postgreSQL.biblioteca_Juan.service.AutorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,34 +10,46 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/autor")
+@RequestMapping("/api/autores")
 public class AutorController {
     @Autowired
     private AutorService autorService;
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<?> crearAutor(@RequestBody Autor autor){
-        return new ResponseEntity<>(autorService.crearAutor(autor), HttpStatus.CREATED);
+        return new ResponseEntity<>(autorService.saveAutor(autor), HttpStatus.CREATED);
     }
-    @GetMapping("/getOne/{id}")
-    public ResponseEntity<?> buscarAutorById(@PathVariable UUID id){
-        return new ResponseEntity<>(autorService.buscarAutorById(id),HttpStatus.FOUND);
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getAutorById(@PathVariable UUID id){
+        Autor autor1=autorService.getAutorById(id);
+        if (autor1!=null){
+            return new ResponseEntity<>(autor1,HttpStatus.FOUND);
+        }else {
+            return new ResponseEntity<>("No se ha encontrado el autor",HttpStatus.NOT_FOUND);
+        }
     }
-    @GetMapping("/listar")
+    @GetMapping
     public ResponseEntity<?> listarAutores(){
-        return new ResponseEntity<>(autorService.listarAutores(),HttpStatus.FOUND);
+        return new ResponseEntity<>(autorService.getAllAutores(),HttpStatus.FOUND);
     }
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> actualizarAutor(@RequestBody Autor autor,@PathVariable UUID id){
-        return new ResponseEntity<>(autorService.actualizarAutor(autor,id),HttpStatus.OK);
+        Autor autor1=autorService.getAutorById(id);
+        if (autor1!=null){
+            autor.setId_autor(id); // asugura que el ID del autor sea correcto
+            return new ResponseEntity<>(autorService.saveAutor(autor),HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>("No se ha encontrado el autor a actualizar",HttpStatus.NOT_FOUND);
+        }
     }
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> borrarAutorById(@PathVariable UUID id){
-        try{
-            autorService.borrarAutorById(id);
-            return new ResponseEntity<>("Autor borrado correctamente",HttpStatus.OK);
-        }catch (Exception ex){
-            throw new BadRequestExcepcion("Error al borrar el autor");
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteAutorById(@PathVariable UUID id){
+        Autor autor1=autorService.getAutorById(id);
+        if (autor1!=null){
+            autorService.deleteAutorById(id);
+            return new ResponseEntity<>("Autor borrado correctamentes",HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>("No se ha encontrado el autor a borrar",HttpStatus.NOT_FOUND);
         }
     }
 }

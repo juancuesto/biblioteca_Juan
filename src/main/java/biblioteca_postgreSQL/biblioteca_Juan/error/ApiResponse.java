@@ -3,7 +3,6 @@ package biblioteca_postgreSQL.biblioteca_Juan.error;
 import java.util.Date;
 
 public class ApiResponse {
-
     private Date tiempo=new Date();
     private String mensaje;
     private String url;

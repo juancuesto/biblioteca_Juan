@@ -1,8 +1,7 @@
 package biblioteca_postgreSQL.biblioteca_Juan.controller;
 
+import biblioteca_postgreSQL.biblioteca_Juan.entity.Prestamo;
 import biblioteca_postgreSQL.biblioteca_Juan.entity.Usuario;
-import biblioteca_postgreSQL.biblioteca_Juan.error.BadRequestExcepcion;
-import biblioteca_postgreSQL.biblioteca_Juan.service.LibroServiceImpl;
 import biblioteca_postgreSQL.biblioteca_Juan.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,34 +11,53 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/usuario")
+@RequestMapping("/api/usuarios")
 public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @PostMapping("/add")
-    public ResponseEntity<?> crearUsuario(@RequestBody Usuario usuario){
-        return new ResponseEntity<>(usuarioService.crearUsuario(usuario), HttpStatus.CREATED);
+
+    @PostMapping
+    public ResponseEntity<?> crearUsuario(@RequestBody Usuario usuario) {
+        return new ResponseEntity<>(usuarioService.saveUsuario(usuario), HttpStatus.CREATED);
     }
-    @GetMapping("/getOne/{id}")
-    public ResponseEntity<?> buscarUsuarioById(@PathVariable UUID id){
-        return new ResponseEntity<>(usuarioService.buscarUsuarioById(id),HttpStatus.FOUND);
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUsuarioById(@PathVariable UUID id) {
+        Usuario usuario=usuarioService.getUsuarioById(id);
+        if (usuario != null) {
+            return new ResponseEntity<>(usuario, HttpStatus.FOUND);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado el Usuario", HttpStatus.NOT_FOUND);
+        }
     }
-    @GetMapping("/listar")
-    public ResponseEntity<?> listarUsuarios(){
-        return new ResponseEntity<>(usuarioService.listarUsuarios(),HttpStatus.FOUND);
+
+    @GetMapping
+    public ResponseEntity<?> getAllUsuario() {
+        return new ResponseEntity<>(usuarioService.getAllUsuarios(), HttpStatus.OK);
     }
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> actualizarUsuario(@RequestBody Usuario usuario,@PathVariable UUID id){
-        return new ResponseEntity<>(usuarioService.actualizarUsuario(usuario,id),HttpStatus.OK);
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizarUsuario(@RequestBody Usuario usuario, @PathVariable UUID id) {
+        Usuario usuario1 = usuarioService.getUsuarioById(id);
+        if (usuario1 != null) {
+            usuario1.setId_usuario(usuario.getId_usuario());
+            return new ResponseEntity<>(usuarioService.saveUsuario(usuario), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado el Usuario a actualiazar", HttpStatus.NOT_FOUND);
+        }
     }
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> borrarUsuarioById(@PathVariable UUID id){
-        try{
-            usuarioService.borrarUsuarioById(id);
-            return new ResponseEntity<>("Usuario borrado correctamente",HttpStatus.OK);
-        }catch (Exception ex){
-            throw new BadRequestExcepcion("Error al borrar el Usuario");
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUsuarioById(@PathVariable UUID id) {
+        Usuario usuario=usuarioService.getUsuarioById(id);
+        if (usuario != null) {
+            usuarioService.deleteUsuarioById(id);
+            return new ResponseEntity<>("Usuario borrado correctamente", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado el Usuario a borrar", HttpStatus.NOT_FOUND);
         }
     }
 }
+
+

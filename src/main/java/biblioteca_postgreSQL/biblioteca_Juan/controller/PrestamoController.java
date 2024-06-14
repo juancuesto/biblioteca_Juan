@@ -1,8 +1,7 @@
 package biblioteca_postgreSQL.biblioteca_Juan.controller;
 
-import biblioteca_postgreSQL.biblioteca_Juan.entity.Autor;
+import biblioteca_postgreSQL.biblioteca_Juan.entity.Libro;
 import biblioteca_postgreSQL.biblioteca_Juan.entity.Prestamo;
-import biblioteca_postgreSQL.biblioteca_Juan.error.BadRequestExcepcion;
 import biblioteca_postgreSQL.biblioteca_Juan.service.PrestamoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,34 +11,50 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/prestamo")
+@RequestMapping("/api/prestamos")
 public class PrestamoController {
     @Autowired
     private PrestamoService prestamoService;
 
-    @PostMapping("/add")
-    public ResponseEntity<?> crearPrestamo(@RequestBody Prestamo prestamo){
-        return new ResponseEntity<>(prestamoService.crearPrestamo(prestamo), HttpStatus.CREATED);
+    @PostMapping
+    public ResponseEntity<?> crearPrestamo(@RequestBody Prestamo prestamo) {
+        return new ResponseEntity<>(prestamoService.savePrestamo(prestamo), HttpStatus.CREATED);
     }
-    @GetMapping("/getOne/{id}")
-    public ResponseEntity<?> buscarPrestamoById(@PathVariable UUID id){
-        return new ResponseEntity<>(prestamoService.buscarPrestamoById(id),HttpStatus.FOUND);
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPrestamoById(@PathVariable UUID id) {
+        Prestamo prestamo = prestamoService.getPrestamoById(id);
+        if (prestamo != null) {
+            return new ResponseEntity<>(prestamo, HttpStatus.FOUND);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado el Prestamo", HttpStatus.NOT_FOUND);
+        }
     }
-    @GetMapping("/listar")
-    public ResponseEntity<?> listarPrestamos(){
-        return new ResponseEntity<>(prestamoService.listarPrestamos(),HttpStatus.FOUND);
+
+    @GetMapping
+    public ResponseEntity<?> getAllPrestamo() {
+        return new ResponseEntity<>(prestamoService.getAllPrestamos(), HttpStatus.OK);
     }
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> actualizarPrestamo(@RequestBody Prestamo prestamo,@PathVariable UUID id){
-        return new ResponseEntity<>(prestamoService.actualizarPrestamo(prestamo,id),HttpStatus.OK);
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizarPrestamo(@RequestBody Prestamo prestamo, @PathVariable UUID id) {
+        Prestamo prestamo1 = prestamoService.getPrestamoById(id);
+        if (prestamo1 != null) {
+            prestamo1.setId_prestamo(prestamo.getId_prestamo());
+            return new ResponseEntity<>(prestamoService.savePrestamo(prestamo1), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado el Prestamo a actualiazar", HttpStatus.NOT_FOUND);
+        }
     }
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> borrarPrestamoById(@PathVariable UUID id){
-        try{
-            prestamoService.borrarPrestamoById(id);
-            return new ResponseEntity<>("Prestamo borrado correctamente",HttpStatus.OK);
-        }catch (Exception ex){
-            throw new BadRequestExcepcion("Error al borrar el presstamo");
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteLibroById(@PathVariable UUID id) {
+        Prestamo prestamo=prestamoService.getPrestamoById(id);
+        if (prestamo != null) {
+            prestamoService.deletePrestamoById(id);
+            return new ResponseEntity<>("Prestamo borrado correctamente", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("No se ha encontrado el Prestamo a borrar", HttpStatus.NOT_FOUND);
         }
     }
 }

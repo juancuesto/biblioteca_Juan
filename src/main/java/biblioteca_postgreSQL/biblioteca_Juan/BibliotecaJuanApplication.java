@@ -4,10 +4,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BibliotecaJuanApplication {
+public class  BibliotecaJuanApplication {
+
 
 	public static void main(String[] args) {
-		SpringApplication.run(BibliotecaJuanApplication.class, args);
+		SpringApplication.
+				run(BibliotecaJuanApplication.class, args);
 	}
 
 }
